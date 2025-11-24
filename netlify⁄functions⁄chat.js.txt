@@ -1,0 +1,35 @@
+exports.handler = async function(event, context) {
+  // السماح لجميع المصادر
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
+  try {
+    const { message } = JSON.parse(event.body || '{}');
+
+    // هنا ستدمج DeepSeek API لاحقاً
+    const response = `🌹 شكراً لرسالتك! المساعد الذكي جاهز. رسالتك: "${message}"`;
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ success: true, response })
+    };
+
+  } catch (error) {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        response: 'عذراً، حدث خطأ. للاستفسارات: 📞 +201552987888'
+      })
+    };
+  }
+};
