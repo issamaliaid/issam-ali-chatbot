@@ -1,0 +1,113 @@
+ export default async function handler(req, res) {
+  // السماح لجميع المصادر (CORS)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // التعامل مع طلبات OPTIONS
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'الطريقة غير مسموحة' });
+  }
+
+  try {
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'الرسالة مطلوبة' });
+    }
+
+    // المفتاح الآمن من Environment Variables
+    const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+
+    if (!DEEPSEEK_API_KEY) {
+      return res.status(500).json({
+        response: 'عذراً، الخدمة غير متاحة حالياً. يرجى المحاولة لاحقاً.'
+      });
+    }
+
+    const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `أنت مساعد ISSAM ALI - مصمم أزياء بخبرة 25 عاماً.
+أنت متخصص في تصميم الفساتين والأزياء.
+
+معلومات ISSAM ALI:
+- الموقع: القاهرة، مصر
+- الموقع الالكتروني: https://issamali.my.canva.site/
+- الهاتف: +201552987888
+- الواتساب: +201552987888
+- الإيميل: issamaliaid@gmail.com
+- الخدمات: فساتين زفاف، فساتين مناسبات، استشارات تصميم
+
+تعليمات مهمة:
+- الرد دائماً باللغة العربية
+- كن ودوداً واحترافياً
+- قدم نصائح عملية في عالم الأزياء
+- شجع على زيارة الأتيلير للاستفادة من الخدمات
+- لا تقدم معلومات خاطئة عن الأسعار
+- إذا كان السؤال خارج تخصص الأزياء، وجهه للتواصل المباشر
+
+أسلوب الرد:
+- استخدم الرموز التعبيرة 🌹👑💎 بشكل معتدل
+- كن مفيداً وواضحاً
+- اجعل الردود شخصية`
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+        stream: false
+      })
+    });
+
+    if (!deepseekResponse.ok) {
+      const errorData = await deepseekResponse.text();
+      console.error('DeepSeek API Error:', errorData);
+      throw new Error(`خطأ في API: ${deepseekResponse.status}`);
+    }
+
+    const data = await deepseekResponse.json();
+
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      return res.status(200).json({
+        success: true,
+        response: data.choices[0].message.content
+      });
+    } else {
+      throw new Error('رد غير متوقع من API');
+    }
+
+  } catch (error) {
+    console.error('Server Error:', error);
+
+    // ردود احتياطية ذكية
+    const fallbackResponses = [
+      "🌹 عذراً، حدث خطأ تقني. للاستفسارات الفورية، يرجى التواصل مباشرة على: 📞 +201552987888",
+      "💎 الخدمة غير متاحة حالياً. نوصي بزيارة الأتيلير لمشاهدة أحدث التصميمات! 📍 القاهرة - مصر",
+      "👑 للأسف لا أستطيع الرد الآن. يرجى التواصل عبر الواتساب: +201552987888 وسنرد عليك فوراً!"
+    ];
+
+    const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+
+    return res.status(200).json({
+      success: false,
+      response: randomResponse
+    });
+  }
+}
+

@@ -13,7 +13,7 @@ exports.handler = async function(event, context) {
   try {
     const { message } = JSON.parse(event.body || '{}');
 
-    // هنا ستدمج DeepSeek API لاحقاً
+    // sk-2c03139bbc9f46e6981d53b7f41e737e
     const response = `🌹 شكراً لرسالتك! المساعد الذكي جاهز. رسالتك: "${message}"`;
 
     return {

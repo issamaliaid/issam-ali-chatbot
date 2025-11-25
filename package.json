@@ -1,0 +1,11 @@
+{
+  "name": "issam-ali-chatbot",
+  "version": "1.0.0",
+  "description": "Secure AI Chatbot for ISSAM ALI",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/node": "^2.0.0"
+  }
+}
